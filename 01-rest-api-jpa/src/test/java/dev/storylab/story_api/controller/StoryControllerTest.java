@@ -3,6 +3,7 @@ package dev.storylab.story_api.controller;
 import dev.storylab.story_api.dto.CreateStoryRequest;
 import dev.storylab.story_api.dto.StoryResponse;
 import dev.storylab.story_api.entity.StoryStatus;
+import dev.storylab.story_api.exception.StoryNotFoundException;
 import dev.storylab.story_api.service.StoryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +13,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(StoryController.class)
 public class StoryControllerTest {
@@ -159,5 +161,121 @@ public class StoryControllerTest {
 
         verify(storyService, never())
                 .create(any(CreateStoryRequest.class));
+    }
+
+    @Test
+    void returnAllStories() throws Exception {
+        LocalDateTime timestamp = LocalDateTime.now();
+
+        List<StoryResponse> stories = List.of(
+                new StoryResponse(
+                        1L,
+                        "The Silent House",
+                        "A beautiful yellow house",
+                        "Only birds chirping can be heard...",
+                        StoryStatus.DRAFT,
+                        timestamp,
+                        timestamp
+                ),
+                new StoryResponse(
+                        2L,
+                        "The Good Cousin",
+                        "The youngest man",
+                        "He teaches the children crafting...",
+                        StoryStatus.PUBLISHED,
+                        timestamp,
+                        timestamp
+                )
+        );
+
+        when(storyService.getAllStories()).thenReturn(stories);
+
+        mockMvc.perform(get("/api/stories"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()")
+                        .value(2))
+                .andExpect(jsonPath("$[0].id")
+                        .value(1))
+                .andExpect(jsonPath("$[0].title")
+                        .value("The Silent House"))
+                .andExpect(jsonPath("$[0].status")
+                        .value(StoryStatus.DRAFT.name()))
+
+                .andExpect(jsonPath("$[1].id")
+                        .value(2))
+                .andExpect(jsonPath("$[1].title")
+                        .value("The Good Cousin"))
+                .andExpect(jsonPath("$[1].status")
+                        .value(StoryStatus.PUBLISHED.name()));
+
+        verify(storyService, times(1))
+                .getAllStories();
+    }
+
+    @Test
+    void returnEmptyListWhenNoStoriesExist() throws Exception {
+        when(storyService.getAllStories())
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/stories"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+
+        verify(storyService, times(1))
+                .getAllStories();
+    }
+
+    @Test
+    void returnStoryById() throws Exception {
+        LocalDateTime timestamp = LocalDateTime.now();
+
+        StoryResponse story =
+                new StoryResponse(
+                        1L,
+                        "The Silent House",
+                        "A beautiful yellow house",
+                        "Only birds chirping can be heard...",
+                        StoryStatus.DRAFT,
+                        timestamp,
+                        timestamp
+                );
+
+        when(storyService.getStoryById(1L)).thenReturn(story);
+
+        mockMvc.perform(get("/api/stories/{id}", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id")
+                        .value(1))
+                .andExpect(jsonPath("$.title")
+                        .value("The Silent House"))
+                .andExpect(jsonPath("$.status")
+                        .value(StoryStatus.DRAFT.name()));
+
+
+        verify(storyService, times(1))
+                .getStoryById(1L);
+    }
+
+    @Test
+    void returnNotFoundWhenStoryDoesNotExist() throws Exception {
+        when(storyService.getStoryById(99L))
+                .thenThrow(new StoryNotFoundException(99L));
+
+        mockMvc.perform(get("/api/stories/{id}", 99L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(
+                        jsonPath("$.error")
+                                .value("STORY_NOT_FOUND")
+                )
+                        .andExpect(
+                                jsonPath("$.message")
+                                        .value(
+                                                "Story with id 99 not found"
+                                        )
+                        );
+
+        verify(storyService, times(1))
+                .getStoryById(99L);
     }
 }
