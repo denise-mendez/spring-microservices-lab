@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/stories")
 public class StoryController {
@@ -21,5 +23,15 @@ public class StoryController {
     @ResponseStatus(HttpStatus.CREATED)
     public StoryResponse createStory(@Valid @RequestBody CreateStoryRequest request){
         return storyService.create(request);
+    }
+
+    @GetMapping
+    public List<StoryResponse> getAllStories() {
+        return storyService.getAllStories();
+    }
+
+    @GetMapping("/{id}")
+    public StoryResponse getStoryById(@PathVariable Long id){
+        return storyService.getStoryById(id);
     }
 }
