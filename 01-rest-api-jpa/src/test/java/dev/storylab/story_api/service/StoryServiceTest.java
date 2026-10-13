@@ -2,6 +2,7 @@ package dev.storylab.story_api.service;
 
 import dev.storylab.story_api.dto.CreateStoryRequest;
 import dev.storylab.story_api.dto.StoryResponse;
+import dev.storylab.story_api.dto.UpdateStoryRequest;
 import dev.storylab.story_api.entity.Story;
 import dev.storylab.story_api.entity.StoryStatus;
 import dev.storylab.story_api.exception.StoryNotFoundException;
@@ -162,6 +163,206 @@ public class StoryServiceTest {
         );
 
         verify(storyRepository, times(1)).findById(99L);
+    }
+
+    @Test
+    void returnStoriesByStatus() {
+        Story publishedStory = createStory(
+                1L,
+                "The blank diary",
+                StoryStatus.PUBLISHED
+        );
+
+        when(storyRepository.findByStatus(StoryStatus.PUBLISHED))
+                .thenReturn(List.of(publishedStory));
+
+        List<StoryResponse> result =
+                storyService.getStoriesByStatus(StoryStatus.PUBLISHED);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(
+                        1L,
+                        result.getFirst().id()
+                ),
+                () -> assertEquals(
+                        "The blank diary",
+                        result.getFirst().title()
+                ),
+                () -> assertEquals(
+                        StoryStatus.PUBLISHED,
+                        result.getFirst().status()
+                )
+        );
+
+        verify(storyRepository)
+                .findByStatus(StoryStatus.PUBLISHED);
+    }
+
+    @Test
+    void returnEmptyListWhenNoStoriesMatchStatus() {
+        when(storyRepository.findByStatus(StoryStatus.PUBLISHED))
+        .thenReturn(List.of());
+
+        List<StoryResponse> result =
+                storyService.getStoriesByStatus(StoryStatus.PUBLISHED);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+
+        verify(storyRepository, times(1))
+                .findByStatus(StoryStatus.PUBLISHED);
+    }
+
+    @Test
+    void  updateStory() {
+        Story existingStory = createStory(
+                1L,
+                "The blank diary",
+                StoryStatus.PUBLISHED
+        );
+
+        LocalDateTime originalCreatedAt =
+                existingStory.getCreatedAt();
+
+        LocalDateTime  originalUpdatedAt =
+                existingStory.getUpdatedAt();
+
+        UpdateStoryRequest request =
+                new UpdateStoryRequest(
+                        "Updated Title",
+                        "New summary",
+                        "Extended content",
+                        StoryStatus.PUBLISHED
+                );
+
+        when(storyRepository.findById(1L))
+                .thenReturn(Optional.of(existingStory));
+
+        when(storyRepository.save(any(Story.class)))
+                .thenAnswer(invocation ->
+                        invocation.getArgument(0));
+
+        StoryResponse result =
+                storyService.updateStory(1L, request);
+
+        assertAll(
+                () -> assertEquals(1L, result.id()),
+                () -> assertEquals(
+                        "Updated Title",
+                        result.title()
+                ),
+                () -> assertEquals(
+                        "New summary",
+                        result.summary()
+                ),
+                () -> assertEquals(
+                        "Extended content",
+                        result.content()
+                ),
+                () -> assertEquals(
+                        StoryStatus.PUBLISHED.name(),
+                        result.status().name()
+                ),
+                () -> assertEquals(
+                        originalCreatedAt,
+                        result.createdAt()
+                ),
+                () -> assertTrue(
+                        result.updatedAt()
+                                .isAfter(originalUpdatedAt)
+                )
+        );
+
+        ArgumentCaptor<Story> storyCaptor = ArgumentCaptor.forClass(Story.class);
+
+        verify(storyRepository, times((1))).findById(1L);
+        verify(storyRepository, times(1))
+                .save(storyCaptor.capture());
+
+        Story updatedStory = storyCaptor.getValue();
+
+        assertAll(
+                () -> assertEquals(
+                        "Updated Title",
+                        updatedStory.getTitle()
+                ),
+                () -> assertEquals(
+                        StoryStatus.PUBLISHED.name(),
+                        updatedStory.getStatus().name()
+                ),
+                () -> assertEquals(
+                        originalCreatedAt,
+                        updatedStory.getCreatedAt()
+                )
+        );
+    }
+
+    @Test
+    void throwExceptionWhenUpdatingMissingStory() {
+        UpdateStoryRequest request =
+                new UpdateStoryRequest(
+                        "Updated Title",
+                        "New summary",
+                        "Extended content",
+                        StoryStatus.PUBLISHED
+                );
+
+        when(storyRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        StoryNotFoundException exception =
+                assertThrows(
+                        StoryNotFoundException.class,
+                        () -> storyService.updateStory(99L, request)
+                );
+
+        assertEquals(
+                "Story with id 99 not found",
+                exception.getMessage()
+        );
+
+        verify(storyRepository).findById(99L);
+        verify(storyRepository, never()).save(any(Story.class));
+    }
+
+    @Test
+    void shouldDeleteStory() {
+        Story existingStory = createStory(
+                1L,
+                "The blank diary",
+                StoryStatus.PUBLISHED
+        );
+
+        when(storyRepository.findById(1L))
+                .thenReturn(Optional.of(existingStory));
+
+        storyService.deleteStory(1L);
+
+        verify(storyRepository, times(1))
+                .findById(1L);
+        verify(storyRepository, times(1))
+                .delete(existingStory);
+    }
+
+    @Test
+    void throwExceptionWhenDeletingMissingStory() {
+        when(storyRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        StoryNotFoundException exception =
+                assertThrows(
+                        StoryNotFoundException.class,
+                        () -> storyService.deleteStory(99L)
+                );
+
+        assertEquals(
+                "Story with id 99 not found",
+                exception.getMessage()
+        );
+
+        verify(storyRepository).findById(99L);
+        verify(storyRepository, never()).save(any(Story.class));
     }
 
     private Story createStory(Long id, String title,

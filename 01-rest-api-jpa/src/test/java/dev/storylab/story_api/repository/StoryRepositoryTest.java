@@ -2,11 +2,13 @@ package dev.storylab.story_api.repository;
 
 import dev.storylab.story_api.entity.Story;
 import dev.storylab.story_api.entity.StoryStatus;
+import dev.storylab.story_api.exception.StoryNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,5 +50,68 @@ public class StoryRepositoryTest {
                         result.getStatus()),
                 () -> assertNotNull(result.getCreatedAt())
         );
+    }
+
+    @Test
+    void findStoriesByStatus(){
+        storyRepository.save(
+                createStory("The Silent House",
+                        StoryStatus.DRAFT)
+        );
+
+        storyRepository.save(
+                createStory("The Good Cousin",
+                        StoryStatus.DRAFT)
+        );
+
+        storyRepository.flush();
+
+        List<Story> publishedStories =
+                storyRepository.findByStatus(StoryStatus.DRAFT);
+
+        assertAll(
+                () -> assertEquals(
+                        2,
+                        publishedStories.size()
+                ),
+                () -> assertEquals(
+                        "The Silent House",
+                        publishedStories.getFirst().getTitle()
+                ),
+                () -> assertEquals(
+                        StoryStatus.DRAFT.name(),
+                        publishedStories.getFirst().getStatus().name()
+                )
+        );
+    }
+
+    @Test
+    void returnEmptyListWhenNoStoriesMatchStatus() {
+        storyRepository.saveAndFlush(
+                createStory("The Silent House",
+                        StoryStatus.DRAFT)
+        );
+
+        List<Story> result =
+                storyRepository.findByStatus(StoryStatus.PUBLISHED);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    private Story createStory(String title,
+                              StoryStatus status) {
+        LocalDateTime timestamp = LocalDateTime.now();
+        Story story = new Story();
+
+        // story.setId(id);
+        story.setTitle(title);
+        story.setStatus(status);
+        story.setSummary("A summary");
+        story.setContent("Story content");
+        story.setCreatedAt(timestamp);
+        story.setUpdatedAt(timestamp);
+
+        return story;
     }
 }
