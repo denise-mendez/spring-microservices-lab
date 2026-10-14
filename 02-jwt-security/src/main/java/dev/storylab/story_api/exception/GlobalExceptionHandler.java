@@ -16,4 +16,12 @@ public class GlobalExceptionHandler {
             snfe.getMessage()
     );
   }
+
+  public ErrorResponse handleUsernameAlreadyExists(UsernameAlreadyExistsException uaee) {
+    return new ErrorResponse(
+      HttpStatus.CONFLICT.value(),
+      "USERNAME_ALREADY_EXISTS",
+      uaee.getMessage()
+    );
+  }
 }
