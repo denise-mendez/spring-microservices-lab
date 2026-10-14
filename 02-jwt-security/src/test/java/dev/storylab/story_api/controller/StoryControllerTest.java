@@ -39,6 +39,7 @@ public class StoryControllerTest {
                 "A short mystery story.",
                 "It was almost his birthday when...",
                 StoryStatus.DRAFT,
+                "Ethan",
                 now,
                 now
         );
@@ -174,6 +175,7 @@ public class StoryControllerTest {
                         "A beautiful yellow house",
                         "Only birds chirping can be heard...",
                         StoryStatus.DRAFT,
+                        "Ethan",
                         timestamp,
                         timestamp
                 ),
@@ -183,6 +185,7 @@ public class StoryControllerTest {
                         "The youngest man",
                         "He teaches the children crafting...",
                         StoryStatus.PUBLISHED,
+                        "Ethan",
                         timestamp,
                         timestamp
                 )
@@ -236,6 +239,7 @@ public class StoryControllerTest {
                         "A beautiful yellow house",
                         "Only birds chirping can be heard...",
                         StoryStatus.DRAFT,
+                        "Ethan",
                         timestamp,
                         timestamp
                 );

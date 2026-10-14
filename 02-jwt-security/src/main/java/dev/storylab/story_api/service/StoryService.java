@@ -94,6 +94,7 @@ public class StoryService {
                 story.getSummary(),
                 story.getContent(),
                 story.getStatus(),
+                story.getAuthor().getUsername(),
                 story.getCreatedAt(),
                 story.getUpdatedAt()
         );

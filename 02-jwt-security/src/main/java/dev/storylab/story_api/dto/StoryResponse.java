@@ -10,6 +10,7 @@ public record StoryResponse(
         String summary,
         String content,
         StoryStatus status,
+        String author,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

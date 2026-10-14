@@ -24,13 +24,18 @@ public class Story {
     @Column(nullable = false)
     private StoryStatus status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public Story() {}
+    public Story() {
+    }
 
     public Story(Long id, String title, String summary,
                  String content, StoryStatus storyStatus,
@@ -85,6 +90,14 @@ public class Story {
         this.status = status;
     }
 
+    public User getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(User author) {
+        this.author = author;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -110,6 +123,7 @@ public class Story {
                 ", content='" + content + '\'' +
                 ", summary='" + summary + '\'' +
                 ", storyStatus=" + status +
+                ", author=" + author +
                 ", updatedAt=" + updatedAt +
                 '}';
     }
