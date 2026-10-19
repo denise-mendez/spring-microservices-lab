@@ -17,6 +17,8 @@ public class GlobalExceptionHandler {
     );
   }
 
+  @ExceptionHandler(UsernameAlreadyExistsException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
   public ErrorResponse handleUsernameAlreadyExists(UsernameAlreadyExistsException uaee) {
     return new ErrorResponse(
       HttpStatus.CONFLICT.value(),

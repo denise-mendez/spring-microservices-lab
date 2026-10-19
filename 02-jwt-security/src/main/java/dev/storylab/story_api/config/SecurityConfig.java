@@ -22,11 +22,11 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                HttpMethod.GET, "/api/stories/**"
+                                "/api/auth/**"
                         )
                         .permitAll()
                         .requestMatchers(
-                                "/api/auth/**"
+                                HttpMethod.GET, "/api/stories/**"
                         )
                         .permitAll()
                         .requestMatchers(
@@ -38,7 +38,7 @@ public class SecurityConfig {
                         )
                         .hasAnyRole("AUTHOR", "ADMIN")
                         .requestMatchers(
-                                HttpMethod.DELETE, "api/stories/**"
+                                HttpMethod.DELETE, "/api/stories/**"
                         )
                         .hasAnyRole("AUTHOR", "ADMIN")
                         .anyRequest()
