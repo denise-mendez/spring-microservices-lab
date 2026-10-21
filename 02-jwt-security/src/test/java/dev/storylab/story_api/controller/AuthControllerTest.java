@@ -1,6 +1,8 @@
 package dev.storylab.story_api.controller;
 
 import dev.storylab.story_api.config.SecurityConfig;
+import dev.storylab.story_api.dto.AuthResponse;
+import dev.storylab.story_api.dto.LoginRequest;
 import dev.storylab.story_api.dto.RegisterRequest;
 import dev.storylab.story_api.dto.UserResponse;
 import dev.storylab.story_api.entity.Role;
@@ -9,6 +11,7 @@ import dev.storylab.story_api.exception.UsernameAlreadyExistsException;
 import dev.storylab.story_api.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -24,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import({
         GlobalExceptionHandler.class,
     SecurityConfig.class
@@ -153,5 +157,87 @@ public class AuthControllerTest {
 
         verify(authService)
                 .register(any(RegisterRequest.class));
+    }
+
+    @Test
+    void shouldLoginUser() throws Exception {
+
+        AuthResponse response = new AuthResponse(
+                "test-jwt-token",
+                "Bearer",
+                "Nina39",
+                Role.USER
+        );
+
+        when(authService.login(any(LoginRequest.class)))
+                .thenReturn(response);
+
+        String requestBody = """
+                {
+                "username": "Nina39",
+                "password": "Str0ng-4aswd"
+                }
+                """;
+
+        mockMvc.perform(
+                        post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.token").value("test-jwt-token")
+                )
+                .andExpect(
+                        jsonPath("$.type").value("Bearer")
+                )
+                .andExpect(
+                        jsonPath("$.username").value("Nina39")
+                )
+                .andExpect(
+                        jsonPath("$.role").value(Role.USER.name())
+                );
+
+        verify(authService).login(any(LoginRequest.class));
+    }
+
+    @Test
+    void returnBadRequestWhenLoginUsernameIsBlank() throws Exception
+    {
+        String requestBody = """
+                {
+                "username": "",
+                "password": "Str0ng-4aswd"
+                }
+                """;
+
+        mockMvc.perform(
+                        post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).login(any(LoginRequest.class));
+    }
+
+    @Test
+    void returnBadRequestWhenLoginPasswordIsBlank() throws Exception
+    {
+        String requestBody = """
+                {
+                "username": "Nina39",
+                "password": ""
+                }
+                """;
+
+        mockMvc.perform(
+                        post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                )
+                .andExpect(status().isBadRequest());
+
+        verify(authService, never()).login(any(LoginRequest.class));
     }
 }
