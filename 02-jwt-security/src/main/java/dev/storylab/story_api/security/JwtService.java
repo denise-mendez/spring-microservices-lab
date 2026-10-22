@@ -20,8 +20,8 @@ public class JwtService {
     private final String secret;
     private final long expiration;
 
-    public JwtService(@Value("$security.jwt.secret") String secret,
-                      @Value("$security.jwt.expiration") long expiration) {
+    public JwtService(@Value("${security.jwt.secret}") String secret,
+                      @Value("${security.jwt.expiration}") long expiration) {
         this.secret = secret;
         this.expiration = expiration;
     }
