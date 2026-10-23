@@ -7,6 +7,7 @@ import dev.storylab.story_api.entity.Story;
 import dev.storylab.story_api.entity.StoryStatus;
 import dev.storylab.story_api.exception.StoryNotFoundException;
 import dev.storylab.story_api.repository.StoryRepository;
+import dev.storylab.story_api.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,11 +23,14 @@ import static org.mockito.Mockito.*;
 public class StoryServiceTest {
     private StoryService storyService;
     private StoryRepository storyRepository;
+    private UserRepository userRepository;
 
     @BeforeEach
     public void setUp(){
         storyRepository = mock(StoryRepository.class);
-        storyService = new StoryService(storyRepository);
+        userRepository = mock(UserRepository.class);
+
+        storyService = new StoryService(storyRepository, userRepository);
     }
 
     @Test
