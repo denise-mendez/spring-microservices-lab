@@ -5,12 +5,17 @@ import dev.storylab.story_api.dto.StoryResponse;
 import dev.storylab.story_api.dto.UpdateStoryRequest;
 import dev.storylab.story_api.entity.Story;
 import dev.storylab.story_api.entity.StoryStatus;
+import dev.storylab.story_api.entity.User;
+import dev.storylab.story_api.entity.Role;
 import dev.storylab.story_api.exception.StoryNotFoundException;
 import dev.storylab.story_api.repository.StoryRepository;
 import dev.storylab.story_api.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,12 +40,19 @@ public class StoryServiceTest {
 
     @Test
     void createStory_201() {
+        User author = createUser("Matt10", Role.AUTHOR);
+
         CreateStoryRequest request = new CreateStoryRequest(
                 "The Last Train",
                 "A short mystery story.",
                 "It was almost his birthday when...",
                 StoryStatus.DRAFT
         );
+
+        authenticateAs(author);
+
+        when(userRepository.findByUsername("Matt10"))
+                .thenReturn(Optional.of(author));
 
         when(storyRepository.save(any(Story.class)))
                 .thenAnswer(invocation -> {
@@ -83,16 +95,25 @@ public class StoryServiceTest {
 
     @Test
     void returnAllStories() {
+        User author = createUser("Matt10", Role.AUTHOR);
+
         Story firstStory = createStory(1L,
                 "The Silent House",
-                StoryStatus.DRAFT);
+                StoryStatus.DRAFT,
+                author);
 
         Story secondStory = createStory(2L,
                 "The Good Cousin",
-                StoryStatus.PUBLISHED);
+                StoryStatus.PUBLISHED,
+                author);
+
+        authenticateAs(author);
 
         when(storyRepository.findAll())
                 .thenReturn(List.of(firstStory, secondStory));
+
+        when(userRepository.findByUsername("Matt10"))
+                .thenReturn(Optional.of(author));
 
         List<StoryResponse> result =
                 storyService.getAllStories();
@@ -128,12 +149,20 @@ public class StoryServiceTest {
 
     @Test
     void returnStoryById() {
+        User author = createUser("Matt10", Role.AUTHOR);
+
         Story firstStory = createStory(1L,
                 "The Silent House",
-                StoryStatus.DRAFT);
+                StoryStatus.DRAFT,
+                author);
+
+        authenticateAs(author);
 
         when(storyRepository.findById(1L))
                 .thenReturn(Optional.of(firstStory));
+
+        when(userRepository.findByUsername("Matt10"))
+                .thenReturn(Optional.of(author));
 
         StoryResponse result =
                 storyService.getStoryById(1L);
@@ -171,10 +200,12 @@ public class StoryServiceTest {
 
     @Test
     void returnStoriesByStatus() {
+        User author = createUser("Matt10", Role.AUTHOR);
         Story publishedStory = createStory(
                 1L,
                 "The blank diary",
-                StoryStatus.PUBLISHED
+                StoryStatus.PUBLISHED,
+                author
         );
 
         when(storyRepository.findByStatus(StoryStatus.PUBLISHED))
@@ -220,10 +251,12 @@ public class StoryServiceTest {
 
     @Test
     void  updateStory() {
+        User author = createUser("Matt10", Role.AUTHOR);
         Story existingStory = createStory(
                 1L,
                 "The blank diary",
-                StoryStatus.PUBLISHED
+                StoryStatus.PUBLISHED,
+                author
         );
 
         LocalDateTime originalCreatedAt =
@@ -240,12 +273,17 @@ public class StoryServiceTest {
                         StoryStatus.PUBLISHED
                 );
 
+        authenticateAs(author);
+
         when(storyRepository.findById(1L))
                 .thenReturn(Optional.of(existingStory));
 
         when(storyRepository.save(any(Story.class)))
                 .thenAnswer(invocation ->
                         invocation.getArgument(0));
+
+        when(userRepository.findByUsername("Matt10"))
+                .thenReturn(Optional.of(author));
 
         StoryResponse result =
                 storyService.updateStory(1L, request);
@@ -332,14 +370,22 @@ public class StoryServiceTest {
 
     @Test
     void shouldDeleteStory() {
+        User author = createUser("Matt10", Role.AUTHOR);
+
         Story existingStory = createStory(
                 1L,
                 "The blank diary",
-                StoryStatus.PUBLISHED
+                StoryStatus.PUBLISHED,
+                author
         );
+
+        authenticateAs(author);
 
         when(storyRepository.findById(1L))
                 .thenReturn(Optional.of(existingStory));
+
+        when(userRepository.findByUsername("Matt10"))
+                .thenReturn(Optional.of(author));
 
         storyService.deleteStory(1L);
 
@@ -370,18 +416,39 @@ public class StoryServiceTest {
     }
 
     private Story createStory(Long id, String title,
-                              StoryStatus status) {
+                              StoryStatus status, User author) {
         LocalDateTime timestamp = LocalDateTime.now();
         Story story = new Story();
 
         story.setId(id);
         story.setTitle(title);
         story.setStatus(status);
+        story.setAuthor(author);
         story.setSummary("A summary");
         story.setContent("Story content");
         story.setCreatedAt(timestamp);
         story.setUpdatedAt(timestamp);
 
         return story;
+    }
+
+    private User createUser(String username, Role role) {
+        User user = new User();
+
+        user.setUsername(username);
+        user.setPassword("encodedPassword");
+        user.setRole(role);
+        user.setCreatedAt(LocalDateTime.now());
+
+        return user;
+    }
+
+    private void authenticateAs(User user) {
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(user.getUsername(),
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

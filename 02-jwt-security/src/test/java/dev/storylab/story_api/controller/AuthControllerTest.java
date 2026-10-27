@@ -8,6 +8,8 @@ import dev.storylab.story_api.dto.UserResponse;
 import dev.storylab.story_api.entity.Role;
 import dev.storylab.story_api.exception.GlobalExceptionHandler;
 import dev.storylab.story_api.exception.UsernameAlreadyExistsException;
+import dev.storylab.story_api.security.JwtAuthenticationFilter;
+import dev.storylab.story_api.security.JwtService;
 import dev.storylab.story_api.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     @MockitoBean
     private AuthService authService;

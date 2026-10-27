@@ -4,9 +4,12 @@ import dev.storylab.story_api.dto.CreateStoryRequest;
 import dev.storylab.story_api.dto.StoryResponse;
 import dev.storylab.story_api.entity.StoryStatus;
 import dev.storylab.story_api.exception.StoryNotFoundException;
+import dev.storylab.story_api.security.JwtAuthenticationFilter;
+import dev.storylab.story_api.security.JwtService;
 import dev.storylab.story_api.service.StoryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -22,12 +25,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(StoryController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class StoryControllerTest {
     @Autowired
     MockMvc mockMvc;
 
     @MockitoBean
     private StoryService storyService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     @Test
     void createStory_201() throws Exception {

@@ -2,7 +2,8 @@ package dev.storylab.story_api.repository;
 
 import dev.storylab.story_api.entity.Story;
 import dev.storylab.story_api.entity.StoryStatus;
-import dev.storylab.story_api.exception.StoryNotFoundException;
+import dev.storylab.story_api.entity.User;
+import dev.storylab.story_api.entity.Role;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -18,15 +19,20 @@ public class StoryRepositoryTest {
     @Autowired
     private StoryRepository storyRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Test
     void saveStory(){
         LocalDateTime now = LocalDateTime.now();
+        User author = userRepository.saveAndFlush(createUser("Alice50", Role.AUTHOR));
         Story story = new Story();
 
         story.setTitle("The Last Train");
         story.setSummary("A short mystery story.");
         story.setContent("It was almost his birthday when...");
         story.setStatus(StoryStatus.DRAFT);
+        story.setAuthor(author);
         story.setCreatedAt(now);
         story.setUpdatedAt(now);
 
@@ -54,14 +60,15 @@ public class StoryRepositoryTest {
 
     @Test
     void findStoriesByStatus(){
+        User author = userRepository.saveAndFlush(createUser("Leslie70", Role.AUTHOR));
         storyRepository.save(
                 createStory("The Silent House",
-                        StoryStatus.DRAFT)
+                        StoryStatus.DRAFT, author)
         );
 
         storyRepository.save(
                 createStory("The Good Cousin",
-                        StoryStatus.DRAFT)
+                        StoryStatus.DRAFT, author)
         );
 
         storyRepository.flush();
@@ -87,9 +94,11 @@ public class StoryRepositoryTest {
 
     @Test
     void returnEmptyListWhenNoStoriesMatchStatus() {
+        User author = userRepository.saveAndFlush(createUser("Leslie70", Role.AUTHOR));
+
         storyRepository.saveAndFlush(
                 createStory("The Silent House",
-                        StoryStatus.DRAFT)
+                        StoryStatus.DRAFT, author)
         );
 
         List<Story> result =
@@ -100,18 +109,31 @@ public class StoryRepositoryTest {
     }
 
     private Story createStory(String title,
-                              StoryStatus status) {
+                              StoryStatus status,
+                              User author) {
         LocalDateTime timestamp = LocalDateTime.now();
         Story story = new Story();
 
         // story.setId(id);
         story.setTitle(title);
         story.setStatus(status);
+        story.setAuthor(author);
         story.setSummary("A summary");
         story.setContent("Story content");
         story.setCreatedAt(timestamp);
         story.setUpdatedAt(timestamp);
 
         return story;
+    }
+
+    private User createUser(String username, Role role) {
+        User user = new User();
+
+        user.setUsername(username);
+        user.setPassword("encodedPassword");
+        user.setRole(role);
+        user.setCreatedAt(LocalDateTime.now());
+
+        return user;
     }
 }
