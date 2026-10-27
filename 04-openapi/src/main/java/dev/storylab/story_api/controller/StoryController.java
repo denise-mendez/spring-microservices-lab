@@ -4,8 +4,13 @@ import dev.storylab.story_api.dto.CreateStoryRequest;
 import dev.storylab.story_api.dto.StoryResponse;
 import dev.storylab.story_api.dto.UpdateStoryRequest;
 import dev.storylab.story_api.entity.StoryStatus;
+import dev.storylab.story_api.exception.ErrorResponse;
 import dev.storylab.story_api.service.StoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -38,6 +43,30 @@ public class StoryController {
                     )
             }
     )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Story created successfully",
+                    content = @Content(
+                            schema = @Schema(implementation = StoryResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid Story request",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Authenticated user does not have AUTHOR or ADMIN privileges",
+                    content = @Content
+            )
+    })
     public StoryResponse createStory(@Valid @RequestBody CreateStoryRequest request){
         return storyService.create(request);
     }
@@ -45,8 +74,22 @@ public class StoryController {
     @GetMapping
     @Operation(
             summary = "Get Stories",
-            description = "Returns stories visible to the current caller."
+            description = "Returns stories visible to the current caller." +
+                    "Anonymous and USER callers see published stories." +
+                    "AUTHOR additionally sees their own drafts." +
+                    "ADMIN sees all stories."
     )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Stories returned successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid Story status",
+                    content = @Content
+            )
+    })
     public List<StoryResponse> getStories(@RequestParam(required = false)
                                               StoryStatus status) {
         if (status == null)
@@ -58,8 +101,25 @@ public class StoryController {
     @GetMapping("/{id}")
     @Operation(
             summary = "Get Story by Id",
-            description = "Returns te Story when it is visible to the caller."
+            description = "Returns a published Story, an AUTHOR's own draft," +
+                    "or any Story for ADMIN."
     )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Story returned successfully",
+                    content = @Content(
+                            schema = @Schema(implementation = StoryResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Story does not exists or is not visible to the caller",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
     public StoryResponse getStoryById(@PathVariable Long id){
         return storyService.getStoryById(id);
     }
@@ -74,6 +134,39 @@ public class StoryController {
                     )
             }
     )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Story updated successfully",
+                    content = @Content(
+                            schema = @Schema(implementation = StoryResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid update request",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Caller cannot modify this Story",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Story not found",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
     public StoryResponse updateStory(@PathVariable Long id,
                                      @Valid @RequestBody UpdateStoryRequest request
     ){
@@ -91,6 +184,31 @@ public class StoryController {
                     )
             }
     )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Story deleted successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Caller cannot delete this Story",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Story not found",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
     public void deleteStory(@PathVariable Long id){
         storyService.deleteStory(id);
     }
