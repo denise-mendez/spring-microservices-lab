@@ -233,3 +233,10 @@ security.jwt.expiration=3600000
 ```
 
 The actual signing secret is provided through the runtime environment and is not committed to Git.
+
+### 03 - Oauth2 Resource Server
+
+**Status:** Backlog / Optional
+
+Explore externally issued JWT validation using Spring Security OAuth2 Resource Server and an external identity provider.
+
