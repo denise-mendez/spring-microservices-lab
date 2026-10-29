@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class StoryService {
@@ -71,16 +72,14 @@ public class StoryService {
         }
 
         if (user.getRole() == Role.AUTHOR) {
-            return storyRepository.findAll()
-                    .stream()
-                    .filter(story ->
-                            story.getStatus() == StoryStatus.PUBLISHED
-                                    || Objects.equals(story.getAuthor().getId(),
-                                    user.getId())
-                    )
+            List<Story> publishedStories = storyRepository.findByStatus(StoryStatus.PUBLISHED);
+            List<Story> ownDrafts = storyRepository.findByStatusAndAuthor(StoryStatus.DRAFT, user);
+
+            return Stream.concat(publishedStories.stream(), ownDrafts.stream())
                     .map(this::toResponse)
                     .toList();
         }
+
         return getPublishedStories();
     }
 
