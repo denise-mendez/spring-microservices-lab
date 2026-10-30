@@ -106,3 +106,130 @@ GET    /api/stories?status=?
 PUT    /api/stories/{id}
 DELETE /api/stories/{id}
 ```
+
+# 02 - JWT Security
+
+**Status:** Implemented
+
+This lab extends the Story REST API from `01-rest-api-jpa` by adding stateless authentication and authorization with Spring Security and JWT.
+
+The main security flow is:
+
+```text
+Client
+   │
+   │ username + password
+   ▼
+AuthenticationManager
+   │
+   ▼
+JWT
+   │
+   │ Authorization: Bearer <JWT>
+   ▼
+JwtAuthenticationFilter
+   │
+   ▼
+SecurityContext
+   │
+   ▼
+Role Authorization
+   │
+   ▼
+Story Ownership / Visibility
+```
+
+## Focus
+
+### Authentication
+
+- User registration
+- BCrypt password encoding
+- Username/password authentication
+- JWT generation
+- JWT signature and expiration validation
+- Bearer token authentication
+- Stateless session configuration
+- JWT authentication filter
+- Spring Security `SecurityContext`
+
+Authentication endpoints:
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+```
+
+Public registration automatically creates a:
+
+```text
+USER
+```
+
+The client cannot self-assign `AUTHOR` or `ADMIN`.
+
+### Authorization
+
+Three roles are supported:
+
+- `USER` can consume published content.
+- `AUTHOR` can create Stories and manage their own Stories.
+- `ADMIN` can manage any Story.
+
+### Story Ownership
+
+Every Story belongs to an author.
+
+```text
+Story
+└── author → User
+```
+
+The author is derived from the authenticated user rather than accepted from the request.
+
+This prevents a client from creating a Story on behalf of another user.
+
+### Story Visibility
+
+Published Stories are public.
+
+Draft Stories are protected based on role and ownership.
+
+## Visibility Matrix
+
+```text
+                              Anonymous   USER   AUTHOR   ADMIN
+
+Published Story                  Yes       Yes     Yes      Yes
+
+Own Draft                        N/A       No      Yes      Yes
+
+Another Author's Draft           No        No      No       Yes
+```
+
+## Write Authorization Matrix
+
+```text
+                              Anonymous   USER   AUTHOR   ADMIN
+
+POST Story                       No        No      Yes     Yes
+
+PUT own Story                    No        No      Yes     Yes
+
+PUT another Author's Story       No        No      No      Yes
+
+DELETE own Story                 No        No      Yes     Yes
+
+DELETE another Author's Story    No        No      No      Yes
+```
+
+## JWT Configuration
+
+JWT configuration is externalized:
+
+```properties
+security.jwt.secret=${JWT_SECRET}
+security.jwt.expiration=3600000
+```
+
+The actual signing secret is provided through the runtime environment and is not committed to Git.
