@@ -97,20 +97,23 @@ public class StoryServiceTest {
     void returnAllStories() {
         User author = createUser("Matt10", Role.AUTHOR);
 
-        Story firstStory = createStory(1L,
-                "The Silent House",
-                StoryStatus.DRAFT,
-                author);
-
-        Story secondStory = createStory(2L,
+        Story firstStory = createStory(2L,
                 "The Good Cousin",
                 StoryStatus.PUBLISHED,
                 author);
 
+        Story secondStory = createStory(1L,
+                "The Silent House",
+                StoryStatus.DRAFT,
+                author);
+
         authenticateAs(author);
 
-        when(storyRepository.findAll())
-                .thenReturn(List.of(firstStory, secondStory));
+        when(storyRepository.findByStatus(StoryStatus.PUBLISHED))
+                .thenReturn(List.of(firstStory));
+
+        when(storyRepository.findByStatusAndAuthor(StoryStatus.DRAFT, author))
+                .thenReturn(List.of(secondStory));
 
         when(userRepository.findByUsername("Matt10"))
                 .thenReturn(Optional.of(author));
@@ -121,18 +124,19 @@ public class StoryServiceTest {
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals(2, result.size()),
-                () -> assertEquals(1L, result.get(0).id()),
-                () -> assertEquals("The Silent House",
-                        result.get(0).title()),
-                () -> assertEquals(StoryStatus.DRAFT,
-                        result.get(0).status()),
-                () -> assertEquals(2L, result.get(1).id()),
-                () -> assertEquals("The Good Cousin", result.get(1).title()),
+
+                () -> assertEquals(2L, result.get(0).id()),
+                () -> assertEquals("The Good Cousin", result.get(0).title()),
                 () -> assertEquals(StoryStatus.PUBLISHED,
+                        result.get(0).status()),
+                () -> assertEquals(1L, result.get(1).id()),
+                () -> assertEquals("The Silent House",
+                        result.get(1).title()),
+                () -> assertEquals(StoryStatus.DRAFT,
                         result.get(1).status())
         );
 
-        verify(storyRepository, times(1)).findAll();
+        verify(storyRepository, never()).findAll();
     }
 
     @Test

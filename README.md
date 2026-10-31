@@ -233,3 +233,150 @@ security.jwt.expiration=3600000
 ```
 
 The actual signing secret is provided through the runtime environment and is not committed to Git.
+
+### 03 - Oauth2 Resource Server
+
+**Status:** Backlog / Optional
+
+Explore externally issued JWT validation using Spring Security OAuth2 Resource Server and an external identity provider.
+
+
+## 04 - Open API
+
+**Status:** Implemented
+
+This lab extends the secured Story API by adding an explicit OpenAPI contract and interactive Swagger documentation.
+
+The generated contract describes:
+
+```text
+Endpoints
++
+Request Schemas
++
+Response Schemas
++
+HTTP Status Codes
++
+Error Responses
++
+JWT Bearer Authentication
+```
+
+#### Focus
+
+- Springdoc OpenAPI integration
+- Swagger UI
+- API metadata
+- Authentication endpoint documentation
+- Story endpoint documentation
+- Request/response schemas
+- Error response schemas
+- HTTP response codes
+- JWT Bearer security scheme
+- Protected endpoint security requirements
+
+_**Documentation Endpoints**_
+```text
+GET /v3/api-docs
+GET /v3/api-docs.yaml
+GET /swagger-ui.html
+```
+
+#### Documented API
+
+_**Authentication**_
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+```
+
+_**Stories**_
+
+```text
+POST   /api/stories
+GET    /api/stories
+GET    /api/stories/{id}
+GET    /api/stories?status=PUBLISHED
+GET    /api/stories?status=DRAFT
+PUT    /api/stories/{id}
+DELETE /api/stories/{id}
+```
+
+_**Security**_
+
+The OpenAPI specification defines JWT Bearer authentication:
+
+```text
+type   = http
+scheme = bearer
+format = JWT
+```
+
+Public operations:
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/stories/**
+```
+
+Protected operations:
+
+```text
+POST   /api/stories
+PUT    /api/stories/{id}
+DELETE /api/stories/{id}
+```
+
+Protected operations reference:
+
+```text
+bearerAuth
+```
+
+#### Response Documentation
+
+The API documents relevant responses including:
+
+```text
+200 OK
+201 Created
+204 No Content
+400 Bad Request
+401 Unauthorized
+403 Forbidden
+404 Not Found
+409 Conflict
+```
+
+Application errors use the existing `ErrorResponse` model:
+
+```json
+{
+  "status": 404,
+  "error": "STORY_NOT_FOUND",
+  "message": "Story with id 999 was not found"
+}
+```
+
+
+
+#### Main Learning Outcome
+
+This lab evolves the Story API from:
+
+```text
+Working REST API
+```
+
+into:
+
+```text
+Working REST API
+       +
+Machine-readable OpenAPI contract
+       +
+Interactive Swagger documentation
+```
