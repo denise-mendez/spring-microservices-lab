@@ -1,6 +1,7 @@
 package dev.storylab.story_api.config;
 
 import dev.storylab.story_api.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -56,6 +57,17 @@ public class SecurityConfig {
                         .hasAnyRole("AUTHOR", "ADMIN")
                         .anyRequest()
                         .authenticated()
+                )
+                .exceptionHandling(
+                        exceptions -> exceptions
+                                .authenticationEntryPoint(
+                                        (request, response, exception) ->
+                                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                                )
+                                .accessDeniedHandler(
+                                        (request, response, accessDeniedException) ->
+                                                response.sendError(HttpServletResponse.SC_FORBIDDEN)
+                                )
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

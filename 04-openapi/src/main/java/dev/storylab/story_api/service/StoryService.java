@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class StoryService {
@@ -33,9 +34,13 @@ public class StoryService {
     }
 
     public StoryResponse create(CreateStoryRequest request) {
+        User authenticatedUser = getAuthenticatedUser();
+
+        verifyCanPerformAction(authenticatedUser);
+
         LocalDateTime now = LocalDateTime.now();
         Story story = new Story();
-        User authenticatedUser = getAuthenticatedUser();
+
 
         story.setTitle(request.title());
         story.setSummary(request.summary());
@@ -67,16 +72,14 @@ public class StoryService {
         }
 
         if (user.getRole() == Role.AUTHOR) {
-            return storyRepository.findAll()
-                    .stream()
-                    .filter(story ->
-                            story.getStatus() == StoryStatus.PUBLISHED
-                                    || Objects.equals(story.getAuthor().getId(),
-                                    user.getId())
-                    )
+            List<Story> publishedStories = storyRepository.findByStatus(StoryStatus.PUBLISHED);
+            List<Story> ownDrafts = storyRepository.findByStatusAndAuthor(StoryStatus.DRAFT, user);
+
+            return Stream.concat(publishedStories.stream(), ownDrafts.stream())
                     .map(this::toResponse)
                     .toList();
         }
+
         return getPublishedStories();
     }
 
@@ -207,6 +210,15 @@ public class StoryService {
                 authenticatedUser.getId());
 
         if (!isAdmin && !isOwner) {
+            throw new AccessDeniedException("You are not allowed to perform this action.");
+        }
+    }
+
+    private void verifyCanPerformAction(User authenticatedUser) {
+        boolean isAdmin = authenticatedUser.getRole() == Role.ADMIN;
+        boolean isAuthor = authenticatedUser.getRole() == Role.AUTHOR;
+
+        if (!isAdmin && !isAuthor) {
             throw new AccessDeniedException("You are not allowed to perform this action.");
         }
     }

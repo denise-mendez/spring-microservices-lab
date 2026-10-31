@@ -1,7 +1,6 @@
 package dev.storylab.story_api.config;
 
 import dev.storylab.story_api.security.JwtAuthenticationFilter;
-import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
