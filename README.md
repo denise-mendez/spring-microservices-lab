@@ -60,15 +60,16 @@ spring-microservices-lab/
 ├── 02-jwt-security/
 ├── 03-oauth2-resource-server/
 ├── 04-openapi/
-├── 05-docker-compose/
-├── 06-s3-file-storage/
-├── 07-eureka-discovery/
-├── 08-config-server/
-├── 09-api-gateway/
-├── 10-correlation-id/
-├── 11-kubernetes-deployment/
-├── 12-kubernetes-scaling/
-└── 13-rolling-update/
+├── 05-microservices-split/
+├── 06-docker-compose/
+├── 07-s3-file-storage/
+├── 08-eureka-discovery/
+├── 09-config-server/
+├── 10-api-gateway/
+├── 11-correlation-id/
+├── 12-kubernetes-deployment/
+├── 13-kubernetes-scaling/
+└── 14-rolling-update/
 ```
 
 Each lab is designed as an independent exercise focused on a particular concept.
