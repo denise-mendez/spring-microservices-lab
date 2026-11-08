@@ -381,3 +381,72 @@ Machine-readable OpenAPI contract
        +
 Interactive Swagger documentation
 ```
+
+
+# 05 - Microservices Split
+
+This lab decomposes the Story application into independently deployable Spring Boot services while preserving the authentication, authorization, ownership, and API behavior implemented in previous labs.
+
+## Key Takeaway
+Each service is now an independent Spring Boot application with its own:
+
+- Maven build
+- Application configuration
+- Persistence boundary
+- API contract
+- OpenAPI/Swagger documentation
+
+## Services
+
+### Auth Service
+
+```text
+Port: 8081
+```
+
+Responsibilities:
+
+- Account registration
+- Password encoding with BCrypt
+- Credential authentication
+- Role management
+- JWT generation
+- Identity propagation
+
+Additional endpoints: (To augment functionality)
+
+```text
+PATCH /api/auth/accounts/{id}/role
+```
+
+### User Service
+
+```text
+Port: 8082
+```
+
+Responsibilities:
+
+- User domain ownership
+- User persistence (To be implemented)
+- User retrieval (To be implemented)
+
+### Story Service
+
+```text
+Port: 8083
+```
+
+Responsibilities:
+
+- Story creation
+- Story retrieval
+- Story updates and deletion
+- Published/Draft visibility
+- Story ownership
+- Role-based authorization
+
+
+## Main Learning Outcome
+
+Cross-service relationships are represented through identifiers and authenticated claims rather than shared JPA entities.
