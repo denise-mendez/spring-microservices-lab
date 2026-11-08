@@ -60,15 +60,16 @@ spring-microservices-lab/
 ├── 02-jwt-security/
 ├── 03-oauth2-resource-server/
 ├── 04-openapi/
-├── 05-docker-compose/
-├── 06-s3-file-storage/
-├── 07-eureka-discovery/
-├── 08-config-server/
-├── 09-api-gateway/
-├── 10-correlation-id/
-├── 11-kubernetes-deployment/
-├── 12-kubernetes-scaling/
-└── 13-rolling-update/
+├── 05-microservices-split/
+├── 06-docker-compose/
+├── 07-s3-file-storage/
+├── 08-eureka-discovery/
+├── 09-config-server/
+├── 10-api-gateway/
+├── 11-correlation-id/
+├── 12-kubernetes-deployment/
+├── 13-kubernetes-scaling/
+└── 14-rolling-update/
 ```
 
 Each lab is designed as an independent exercise focused on a particular concept.
@@ -380,3 +381,72 @@ Machine-readable OpenAPI contract
        +
 Interactive Swagger documentation
 ```
+
+
+# 05 - Microservices Split
+
+This lab decomposes the Story application into independently deployable Spring Boot services while preserving the authentication, authorization, ownership, and API behavior implemented in previous labs.
+
+## Key Takeaway
+Each service is now an independent Spring Boot application with its own:
+
+- Maven build
+- Application configuration
+- Persistence boundary
+- API contract
+- OpenAPI/Swagger documentation
+
+## Services
+
+### Auth Service
+
+```text
+Port: 8081
+```
+
+Responsibilities:
+
+- Account registration
+- Password encoding with BCrypt
+- Credential authentication
+- Role management
+- JWT generation
+- Identity propagation
+
+Additional endpoints: (To augment functionality)
+
+```text
+PATCH /api/auth/accounts/{id}/role
+```
+
+### User Service
+
+```text
+Port: 8082
+```
+
+Responsibilities:
+
+- User domain ownership
+- User persistence (To be implemented)
+- User retrieval (To be implemented)
+
+### Story Service
+
+```text
+Port: 8083
+```
+
+Responsibilities:
+
+- Story creation
+- Story retrieval
+- Story updates and deletion
+- Published/Draft visibility
+- Story ownership
+- Role-based authorization
+
+
+## Main Learning Outcome
+
+Cross-service relationships are represented through identifiers and authenticated claims rather than shared JPA entities.
