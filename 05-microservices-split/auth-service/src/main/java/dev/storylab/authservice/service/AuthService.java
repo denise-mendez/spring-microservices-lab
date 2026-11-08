@@ -1,14 +1,13 @@
 package dev.storylab.authservice.service;
 
-import dev.storylab.authservice.dto.AuthResponse;
-import dev.storylab.authservice.dto.LoginRequest;
-import dev.storylab.authservice.dto.RegisterRequest;
-import dev.storylab.authservice.dto.AccountResponse;
+import dev.storylab.authservice.dto.*;
 import dev.storylab.authservice.entity.Account;
+import dev.storylab.authservice.exception.AccountNotFoundException;
 import dev.storylab.authservice.exception.UsernameAlreadyExistsException;
 import dev.storylab.authservice.repository.AccountRepository;
 import dev.storylab.authservice.security.JwtService;
 import dev.storylab.authservice.security.SecurityRole;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

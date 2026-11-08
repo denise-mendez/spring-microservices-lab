@@ -1,9 +1,6 @@
 package dev.storylab.authservice.controller;
 
-import dev.storylab.authservice.dto.AuthResponse;
-import dev.storylab.authservice.dto.LoginRequest;
-import dev.storylab.authservice.dto.RegisterRequest;
-import dev.storylab.authservice.dto.AccountResponse;
+import dev.storylab.authservice.dto.*;
 import dev.storylab.authservice.service.AuthService;
 import dev.storylab.authservice.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
