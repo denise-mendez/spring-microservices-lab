@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityRole securityRole = SecurityRole.valueOf(role);
 
-            CurrentUser currentUser = new CurrentUser(userId, role);
+            CurrentUser currentUser = new CurrentUser(userId, securityRole);
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(currentUser,
                     null,

@@ -12,7 +12,7 @@ public class CurrentUserProvider {
     public Optional<CurrentUser> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null || !authentication.isAuthenticated()
+        if (authentication == null || !authentication.isAuthenticated()
         || !(authentication.getPrincipal() instanceof CurrentUser currentUser)) {
             return Optional.empty();
         }
@@ -21,7 +21,7 @@ public class CurrentUserProvider {
     }
 
     public CurrentUser getRequiredUser() {
-        return getCurrentUser()
-                .orElseThrow(() -> new AccessDeniedException("Authentication is required"));
+        Optional<CurrentUser> currentUser = getCurrentUser();
+        return currentUser.orElseThrow(() -> new AccessDeniedException("Authentication is required"));
     }
 }

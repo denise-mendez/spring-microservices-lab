@@ -65,7 +65,7 @@ public class SecurityConfig {
                                 )
                                 .accessDeniedHandler(
                                         (request, response, accessDeniedException) ->
-                                                response.sendError(HttpServletResponse.SC_FORBIDDEN)
+                                                response.setStatus(HttpServletResponse.SC_FORBIDDEN)
                                 )
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -9,6 +9,7 @@ import dev.storylab.storyservice.exception.StoryNotFoundException;
 import dev.storylab.storyservice.repository.StoryRepository;
 import dev.storylab.storyservice.security.CurrentUser;
 import dev.storylab.storyservice.security.SecurityRole;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -163,7 +164,7 @@ public class StoryService {
         );
     }
 
-    private void verifyCanPerformAction(Story story, CurrentUser currentUser) {
+    private void verifyCanPerformAction(@NonNull Story story, CurrentUser currentUser) {
         boolean isAdmin = currentUser.role().equals(SecurityRole.ADMIN);
 
         boolean isOwner = Objects.equals(story.getAuthorId(),
