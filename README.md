@@ -450,3 +450,18 @@ Responsibilities:
 ## Main Learning Outcome
 
 Cross-service relationships are represented through identifiers and authenticated claims rather than shared JPA entities.
+
+### 06 - Docker Composer
+
+**Status:** Backlog
+
+Reason: local resource constrains.
+
+### 07 - S3 File Storage
+
+**Status:** Backlog / Optional
+
+AWS integration for external file storage
+
+
+### 09 Config Server
