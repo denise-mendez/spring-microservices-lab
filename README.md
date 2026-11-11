@@ -464,4 +464,130 @@ Reason: local resource constrains.
 AWS integration for external file storage
 
 
-### 09 Config Server
+### 08 Config Server
+
+This lab introduces centralized configuration management for the Story microservices using Spring Cloud Config.
+
+The Auth, User, and Story services retrieve their environment-specific configuration from a Config Server instead of keeping all configuration locally.
+
+## Architecture
+
+```text
+story-lab-config-repo
+        │
+        │ Git
+        ▼
+config-server
+    :8888
+        │
+        ├── auth-service  :8081
+        ├── user-service  :8082
+        └── story-service :8083
+```
+
+## External Configuration Repository
+
+Configuration is stored in a separate Git repository:
+
+```text
+story-lab-config-repo/
+├── application.properties
+├── auth-service.properties
+├── user-service.properties
+└── story-service.properties
+```
+
+`application.properties` contains configuration shared across services.
+`auth-service.properties`, `user-service.properties` and `story-service.properties` contain service-specific configuration such as:
+
+```text
+server port
+datasource configuration
+Hibernate configuration
+JWT
+```
+
+## Config Client
+
+Each microservice keeps only the configuration required to identify itself and locate Config Server.
+
+## Configuration Loading Flow
+
+```text
+Microservice starts
+       ↓
+spring.application.name
+       ↓
+Config Server :8888
+       ↓
+Git configuration repository
+       ↓
+application.properties
+       +
+<service-name>.properties
+       ↓
+Spring Environment
+       ↓
+Application starts
+```
+
+## Config Server Endpoints
+
+Configuration can be verified directly through:
+
+```text
+GET http://localhost:8888/auth-service/default
+
+GET http://localhost:8888/user-service/default
+
+GET http://localhost:8888/story-service/default
+```
+
+Each response exposes the property sources resolved for that application and profile.
+
+## Startup Order
+
+Config Server must be available before starting clients because the services use:
+
+```properties
+spring.config.import=configserver:[GitHub_Repository]
+```
+
+Recommended startup order:
+
+```text
+1. config-server
+
+2. auth-service
+3. user-service
+4. story-service
+```
+
+The existing API behavior remains unchanged.
+## Key Learning Outcome
+
+Before this lab:
+
+```text
+auth-service
+└── application.properties
+
+user-service
+└── application.properties
+
+story-service
+└── application.properties
+```
+
+After this lab:
+
+```text
+                    story-lab-config-repo
+                          │
+                          ▼
+                    config-server
+                          │
+              ┌───────────┼───────────┐
+              ▼           ▼           ▼
+            Auth         User        Story
+```
