@@ -63,8 +63,8 @@ spring-microservices-lab/
 ├── 05-microservices-split/
 ├── 06-docker-compose/
 ├── 07-s3-file-storage/
-├── 08-eureka-discovery/
-├── 09-config-server/
+├── 08-config-server/
+├── 09-eureka-discovery/
 ├── 10-api-gateway/
 ├── 11-correlation-id/
 ├── 12-kubernetes-deployment/
