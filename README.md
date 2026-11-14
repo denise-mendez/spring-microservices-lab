@@ -63,8 +63,8 @@ spring-microservices-lab/
 ├── 05-microservices-split/
 ├── 06-docker-compose/
 ├── 07-s3-file-storage/
-├── 08-eureka-discovery/
-├── 09-config-server/
+├── 08-config-server/
+├── 09-eureka-discovery/
 ├── 10-api-gateway/
 ├── 11-correlation-id/
 ├── 12-kubernetes-deployment/
@@ -464,7 +464,7 @@ Reason: local resource constrains.
 AWS integration for external file storage
 
 
-### 08 Config Server
+### 08 - Config Server
 
 This lab introduces centralized configuration management for the Story microservices using Spring Cloud Config.
 
@@ -590,4 +590,135 @@ After this lab:
               ┌───────────┼───────────┐
               ▼           ▼           ▼
             Auth         User        Story
+```
+
+
+### 11 - Eureka Service Discovery
+
+This lab introduces service registration and discovery using Spring Cloud Netflix Eureka.
+
+The Auth, User, and Story microservices register themselves with a standalone Eureka Server, providing a centralized registry of available services.
+
+Eureka Server is implemented as an independent Spring Boot application and it runs on:
+
+```text
+http://localhost:8761
+```
+
+## Standalone Configuration
+
+This lab uses a single standalone Eureka Server.
+
+```properties
+server.port=8761
+
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+
+eureka.server.enable-self-preservation=true
+```
+
+Because the registry is running as a standalone instance, it does not register itself with another Eureka Server and does not fetch a peer registry.
+
+## Centralized Configuration
+
+Eureka configuration is externalized through Spring Cloud Config.
+
+The local Eureka configuration only contains the properties required to identify the application and locate Config Server:
+
+```properties
+spring.application.name=eureka-server
+
+spring.config.import=configserver:http://localhost:8888
+```
+
+The operational configuration is stored in the external `story-lab-config-repo`:
+
+```text
+story-config-repo/
+├── application.properties
+├── eureka-server.properties
+```
+
+```properties
+# eureka-server.properties
+
+server.port=8761
+
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+
+eureka.server.enable-self-preservation=true
+```
+
+## Eureka Clients
+
+The following services register with Eureka:
+
+```text
+AUTH-SERVICE
+USER-SERVICE
+STORY-SERVICE
+```
+
+
+Their service discovery configuration includes:
+
+```properties
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka/
+
+eureka.client.register-with-eureka=true
+eureka.client.fetch-registry=true
+```
+
+## Self-Preservation
+
+Eureka self-preservation remains enabled:
+
+```properties
+eureka.server.enable-self-preservation=true
+```
+
+If Eureka detects an abnormal drop in service heartbeats, it can temporarily preserve existing registrations rather than immediately evicting large numbers of instances.
+
+## Startup Order and Verification
+
+The implementation was verified by:
+
+- Starting Config Server
+- Starting standalone Eureka Server
+- Confirming the Eureka dashboard is available
+- Starting Auth Service and verifying registration
+- Starting User Service and verifying registration
+- Starting Story Service and verifying registration
+- Confirming all three services appear in Eureka
+- Verifying existing REST and JWT behavior remains unchanged
+
+
+## Key Learning Outcome
+
+Before Eureka:
+
+```text
+Services identified by fixed host and port
+
+Auth  → localhost:8081
+User  → localhost:8082
+Story → localhost:8083
+```
+
+After Eureka:
+
+```text
+Services register themselves
+
+        ↓
+
+Eureka Registry
+
+        ↓
+
+AUTH-SERVICE
+USER-SERVICE
+STORY-SERVICE
 ```
