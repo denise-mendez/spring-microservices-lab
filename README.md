@@ -47,6 +47,10 @@ Technologies explored throughout the labs include:
 - Netflix Eureka
 - Spring Cloud Config
 - Spring Cloud Gateway
+- RestClient
+- Spring Cloud Load Balancer
+- Spring WebFlux
+- Apache Kafka
 - Kubernetes
 
 The exact technologies depend on the scope of each lab.
@@ -65,11 +69,13 @@ spring-microservices-lab/
 ├── 07-s3-file-storage/
 ├── 08-config-server/
 ├── 09-eureka-discovery/
-├── 10-api-gateway/
-├── 11-correlation-id/
-├── 12-kubernetes-deployment/
-├── 13-kubernetes-scaling/
-└── 14-rolling-update/
+├── 10-syncrhonous-service-communication/
+├── 11-api-gateway/
+├── 12-correlation-id/
+├── 13-kafka-messaging/
+├── 14-kubernetes-deployment/
+├── 15-kubernetes-scaling/
+└── 15-rolling-update/
 ```
 
 Each lab is designed as an independent exercise focused on a particular concept.
