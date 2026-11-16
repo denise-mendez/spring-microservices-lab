@@ -1,6 +1,5 @@
 package dev.storylab.userservice.repository;
 
-import dev.storylab.userservice.entity.Role;
 import dev.storylab.userservice.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +18,12 @@ public class UserRepositoryTest {
     @Test
     void shouldSaveUser(){
         User user = createUser("Dylan20",
-                "encodedPassword",
-                Role.USER);
+                1L);
 
         User savedUser = userRepository.saveAndFlush(user);
 
         assertAll(
                 () -> assertEquals("Dylan20", savedUser.getUsername()),
-                () -> assertEquals("encodedPassword", savedUser.getPassword()),
-                () -> assertEquals(Role.USER, savedUser.getRole()),
                 () -> assertNotNull(savedUser.getCreatedAt())
         );
     }
@@ -36,8 +32,7 @@ public class UserRepositoryTest {
     void shouldFindUserByUsername(){
         userRepository.saveAndFlush(
             createUser("Dylan20",
-                    "encodedPassword",
-                    Role.USER)
+                    1L)
         );
 
         Optional<User> result = userRepository.findByUsername("Dylan20");
@@ -46,19 +41,15 @@ public class UserRepositoryTest {
         User user = result.orElseThrow();
        assertAll(
                () -> assertEquals("Dylan20", user.getUsername()),
-               () -> assertEquals(Role.USER, user.getRole())
+               () -> assertEquals(1L, user.getAccountId())
         );
-
-        assertEquals(Role.USER, user.getRole());
-        assertEquals("Dylan20", user.getUsername());
     }
 
     @Test
     void shouldReturnTrueWhenUsernameExists() {
         userRepository.saveAndFlush(
                 createUser("Dylan20",
-                        "encodedPassword",
-                        Role.USER)
+                        1L)
         );
 
         boolean exists = userRepository.existsByUsername("Dylan20");
@@ -73,14 +64,49 @@ public class UserRepositoryTest {
         assertFalse(exists);
     }
 
-    private User createUser(String username, String password, Role role){
+    private User createUser(String username, Long accountId){
         User user = new User();
 
         user.setUsername(username);
-        user.setPassword(password);
-        user.setRole(role);
+        user.setAccountId(accountId);
         user.setCreatedAt(LocalDateTime.now());
 
         return user;
+    }
+
+    @Test
+    void shouldFindUserByAccountId(){
+        userRepository.saveAndFlush(
+                createUser("Dylan20",
+                        1L)
+        );
+
+        Optional<User> result = userRepository.findByAccountId(1L);
+        assertTrue(result.isPresent());
+
+        User user = result.orElseThrow();
+        assertAll(
+                () -> assertEquals("Dylan20", user.getUsername()),
+                () -> assertEquals(1L, user.getAccountId())
+        );
+    }
+
+    @Test
+    void shouldReturnTrueWhenAccountIdExists() {
+        userRepository.saveAndFlush(
+                createUser("Dylan20",
+                        1L)
+        );
+
+        boolean exists = userRepository.existsByAccountId(1L);
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void shouldReturnFalseWhenAccountIdDoesNotExists() {
+        boolean exists = userRepository.existsByAccountId(3L);
+
+        assertFalse(exists);
     }
 }
