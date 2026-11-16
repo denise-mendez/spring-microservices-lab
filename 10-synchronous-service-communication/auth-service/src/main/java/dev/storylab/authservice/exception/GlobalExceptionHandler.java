@@ -37,4 +37,14 @@ public class GlobalExceptionHandler {
                 anfe.getMessage()
         );
     }
+
+    @ExceptionHandler(UserServiceUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ErrorResponse handleUserServiceUnavailable(UserServiceUnavailableException usuee) {
+        return new ErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "USER_SERVICE_UNAVAILABLE",
+                usuee.getMessage()
+        );
+    }
 }

@@ -1,5 +1,7 @@
 package dev.storylab.authservice.service;
 
+import dev.storylab.authservice.client.UserClient;
+import dev.storylab.authservice.client.dto.CreateUserRequest;
 import dev.storylab.authservice.dto.*;
 import dev.storylab.authservice.entity.Account;
 import dev.storylab.authservice.exception.AccountNotFoundException;
@@ -21,15 +23,17 @@ public class AuthService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserClient userClient;
 
     AuthenticationManager authenticationManager;
 
     public AuthService(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
-                       AuthenticationManager authenticationManager, JwtService jwtService) {
+                       AuthenticationManager authenticationManager, JwtService jwtService, UserClient userClient) {
         this.accountRepository = accountRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.userClient = userClient;
     }
 
     public AccountResponse register(RegisterRequest request){
@@ -44,6 +48,11 @@ public class AuthService {
         account.setCreatedAt(LocalDateTime.now());
 
         Account savedAccount = accountRepository.save(account);
+
+        userClient.createUser(new CreateUserRequest(
+                savedAccount.getId(),
+                savedAccount.getUsername()
+        ));
 
         return new AccountResponse(
                 savedAccount.getId(),

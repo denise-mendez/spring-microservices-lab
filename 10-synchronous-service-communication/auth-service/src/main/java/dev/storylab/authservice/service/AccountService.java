@@ -24,11 +24,15 @@ public class AccountService {
 
         Account savedAccount = accountRepository.save(account);
 
+        return toResponse(savedAccount);
+    }
+
+    private AccountResponse toResponse(Account account){
         return new AccountResponse(
-                savedAccount.getId(),
-                savedAccount.getUsername(),
-                savedAccount.getRole(),
-                savedAccount.getCreatedAt()
+                account.getId(),
+                account.getUsername(),
+                account.getRole(),
+                account.getCreatedAt()
         );
     }
 }
