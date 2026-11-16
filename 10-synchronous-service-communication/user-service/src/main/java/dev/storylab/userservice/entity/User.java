@@ -16,12 +16,12 @@ public class User {
             length = 100)
     private String username;
 
-    @Column(nullable = false)
-    private String password;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    @Column(
+            name = "account_id",
+            nullable = false,
+            unique = true
+    )
+    private Long accountId;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -44,20 +44,12 @@ public class User {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
+    public Long getAccountId() {
+        return accountId;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
     }
 
     public LocalDateTime getCreatedAt() {
