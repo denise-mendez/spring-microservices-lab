@@ -1,6 +1,9 @@
 package dev.storylab.storyservice.service;
 
+import dev.storylab.storyservice.client.UserClient;
+import dev.storylab.storyservice.client.dto.AuthorSummary;
 import dev.storylab.storyservice.dto.CreateStoryRequest;
+import dev.storylab.storyservice.dto.StoryDetailsResponse;
 import dev.storylab.storyservice.dto.StoryResponse;
 import dev.storylab.storyservice.dto.UpdateStoryRequest;
 import dev.storylab.storyservice.entity.Story;
@@ -21,9 +24,11 @@ import java.util.stream.Stream;
 @Service
 public class StoryService {
     private final StoryRepository storyRepository;
+    private final UserClient userClient;
 
-    public StoryService(StoryRepository storyRepository) {
+    public StoryService(StoryRepository storyRepository, UserClient userClient) {
         this.storyRepository = storyRepository;
+        this.userClient = userClient;
     }
 
     public StoryResponse create(CreateStoryRequest request, CurrentUser currentUser) {
@@ -142,6 +147,29 @@ public class StoryService {
         verifyCanPerformAction(story, currentUser);
 
         storyRepository.delete(story);
+    }
+
+    public StoryDetailsResponse getStoryDetails(Long id, CurrentUser currentUser) {
+        if (currentUser == null) {
+            throw new StoryNotFoundException(id);
+        }
+
+        Story story = findStoryById(id);
+
+        verifyCanPerformAction(story, currentUser);
+
+        AuthorSummary author = userClient.getUserByAccountId(story.getAuthorId());
+
+        return new StoryDetailsResponse(
+                story.getId(),
+                story.getTitle(),
+                story.getSummary(),
+                story.getContent(),
+                story.getStatus(),
+                author,
+                story.getCreatedAt(),
+                story.getUpdatedAt()
+        );
     }
 
     private Story findStoryById(Long id) {

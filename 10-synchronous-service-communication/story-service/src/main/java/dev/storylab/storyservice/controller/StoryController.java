@@ -1,6 +1,7 @@
 package dev.storylab.storyservice.controller;
 
 import dev.storylab.storyservice.dto.CreateStoryRequest;
+import dev.storylab.storyservice.dto.StoryDetailsResponse;
 import dev.storylab.storyservice.dto.StoryResponse;
 import dev.storylab.storyservice.dto.UpdateStoryRequest;
 import dev.storylab.storyservice.entity.StoryStatus;
@@ -222,4 +223,11 @@ public class StoryController {
         CurrentUser currentUser = currentUserProvider.getRequiredUser();
         storyService.deleteStory(id, currentUser);
     }
+
+    @GetMapping("/{id}/details")
+    public StoryDetailsResponse getStoryDetails(@PathVariable Long id){
+        return storyService.
+                getStoryDetails(id, currentUserProvider.getCurrentUser().orElse(null));
+    }
+
 }
