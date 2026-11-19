@@ -47,6 +47,10 @@ Technologies explored throughout the labs include:
 - Netflix Eureka
 - Spring Cloud Config
 - Spring Cloud Gateway
+- RestClient
+- Spring Cloud Load Balancer
+- Spring WebFlux
+- Apache Kafka
 - Kubernetes
 
 The exact technologies depend on the scope of each lab.
@@ -65,11 +69,13 @@ spring-microservices-lab/
 ├── 07-s3-file-storage/
 ├── 08-config-server/
 ├── 09-eureka-discovery/
-├── 10-api-gateway/
-├── 11-correlation-id/
-├── 12-kubernetes-deployment/
-├── 13-kubernetes-scaling/
-└── 14-rolling-update/
+├── 10-syncrhonous-service-communication/
+├── 11-api-gateway/
+├── 12-correlation-id/
+├── 13-kafka-messaging/
+├── 14-kubernetes-deployment/
+├── 15-kubernetes-scaling/
+└── 15-rolling-update/
 ```
 
 Each lab is designed as an independent exercise focused on a particular concept.
@@ -722,3 +728,162 @@ AUTH-SERVICE
 USER-SERVICE
 STORY-SERVICE
 ```
+
+### 10 - Synchronous Service Communication
+
+This lab introduces synchronous communication between the Story microservices using Spring `RestClient`, 
+Eureka service discovery, and Spring Cloud LoadBalancer. This allows services to communicate using logical service names.
+
+## Flow 1: Auth Service → User Service
+
+When an account is registered:
+
+```text
+Client
+   ↓
+POST /api/auth/register
+   ↓
+Auth Service
+   ↓
+Create Account
+   ↓
+Account.id generated
+   ↓
+UserClient
+   ↓
+RestClient
+   ↓
+Spring Cloud LoadBalancer
+   ↓
+Eureka
+   ↓
+USER-SERVICE
+   ↓
+POST /internal/users
+   ↓
+Create User profile
+```
+
+The provisioning request contains only:
+
+```json
+{
+  "accountId": 15,
+  "username": "denise"
+}
+```
+
+## Service Discovery
+
+Callers use the logical service name:
+
+```text
+http://user-service
+```
+
+The resolution flow is:
+
+```text
+RestClient
+    ↓
+http://user-service
+    ↓
+Spring Cloud LoadBalancer
+    ↓
+DiscoveryClient
+    ↓
+Eureka
+    ↓
+available USER-SERVICE instances
+    ↓
+selected instance
+```
+
+This removes the caller's dependency on User Service's physical host and port.
+
+
+## Flow 2: Story Service → User Service
+
+When Story needs author information:
+
+```text
+Story
+   ↓
+authorId
+   ↓
+UserClient
+   ↓
+RestClient
+   ↓
+LoadBalancer
+   ↓
+Eureka
+   ↓
+USER-SERVICE
+   ↓
+GET /api/users/accounts/{accountId}
+```
+
+User Service returns its User representation, while Story Service consumes only the fields it needs.
+
+```java
+public record AuthorSummary(
+        Long accountId,
+        String username
+) {
+}
+```
+
+ Then story details response can enrich Story information with author data:
+
+```json
+{
+  "id": 8,
+  "title": "An special day",
+  "status": "PUBLISHED",
+  "author": {
+    "accountId": 15,
+    "username": "John Doe"
+  }
+}
+```
+
+The sequence is:
+
+```text
+Story Repository
+      ↓
+Story
+      ↓
+authorId
+      ↓
+USER-SERVICE
+      ↓
+AuthorSummary
+      ↓
+StoryDetailsResponse
+```
+
+Existing Story visibility rules are evaluated before retrieving author details.
+
+
+## Key Learning Outcome
+
+Services do not import each other's:
+
+```text
+Entities
+Repositories
+Services
+DTO JARs
+```
+
+This lab also exposes an important trade-off of synchronous microservice communication:
+
+```text
+Immediate response and consistency
+             vs
+Availability coupling and partial failure
+```
+
+Communication happens through HTTP contracts. Small consumer DTOs are intentionally defined locally to avoid compile-time coupling between independently deployable applications.
