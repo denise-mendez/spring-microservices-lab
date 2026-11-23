@@ -887,3 +887,195 @@ Availability coupling and partial failure
 ```
 
 Communication happens through HTTP contracts. Small consumer DTOs are intentionally defined locally to avoid compile-time coupling between independently deployable applications.
+
+
+
+### 11 - API Gateway
+
+This lab introduces an API Gateway as the single entry point to the Story microservices.
+
+Clients no longer need to know where Auth, User, and Story are running. Requests enter through the Gateway, which routes them to services registered with Eureka.
+
+#### Supporting infrastructure:
+
+```text
+story-config-repo
+        │
+        ▼
+Config Server :8888
+        │
+        ├── Eureka Server :8761
+        ├── API Gateway   :8080
+        ├── Auth Service  :8081
+        ├── User Service  :8082
+        └── Story Service :8083
+```
+
+#### Discovery-Based Routing
+
+Routes target Eureka service IDs instead of physical host and port combinations:
+
+```text
+/api/auth/**
+/api/accounts/**
+        ↓
+AUTH-SERVICE
+
+
+/api/users/**
+        ↓
+USER-SERVICE
+
+
+/api/stories/**
+        ↓
+STORY-SERVICE
+```
+
+The routing flow is:
+
+```text
+Client request
+      ↓
+API Gateway
+      ↓
+Path predicate
+      ↓
+logical service ID
+      ↓
+Eureka Server
+      ↓
+available instances
+      ↓
+Spring Cloud LoadBalancer
+      ↓
+selected service instance
+```
+
+#### Gateway Configuration
+
+Gateway configuration is externalized through `story-config-repo`.
+
+The Gateway keeps only its bootstrap configuration locally:
+
+```properties
+spring.application.name=api-gateway
+spring.config.import=configserver:http://localhost:8888
+```
+
+The route configuration lives in:
+
+```text
+story-config-repo/api-gateway.properties
+```
+
+#### Existing Inter-Service Communication
+
+The Gateway does not replace the synchronous communication implemented in the previous lab.
+
+Two different communication paths now exist:
+
+```text
+External traffic
+
+Client
+   ↓
+Gateway
+   ↓
+Auth / User / Story
+```
+
+and:
+
+```text
+Internal traffic
+
+Auth / Story
+     ↓
+RestClient
+     ↓
+Eureka + LoadBalancer
+     ↓
+User Service
+```
+
+The Gateway solves how clients enter the system, while RestClient solves direct communication between services.
+
+## Security
+
+The Gateway currently acts as a routing layer.
+
+JWT authentication and authorization remain enforced by the services that own the protected resources.
+
+For example:
+
+```text
+Client
+   ↓
+Authorization: Bearer <JWT>
+   ↓
+Gateway
+   ↓
+Story Service
+   ↓
+JWT validation
+   ↓
+role and ownership checks
+```
+
+This preserves the existing authorization model.
+
+#### Running the System
+
+Recommended startup order:
+
+```text
+1. Config Server   :8888
+2. Eureka Server   :8761
+3. User Service    :8082
+4. Auth Service    :8081
+5. Story Service   :8083
+6. API Gateway     :8080
+```
+
+The Eureka dashboard should contain:
+
+```text
+API-GATEWAY
+AUTH-SERVICE
+USER-SERVICE
+STORY-SERVICE
+```
+
+## Verification
+
+Existing integration scenarios were repeated through the Gateway instead of calling individual service ports. 
+Functionality remains the same.
+
+
+## Key Learning Outcome
+
+The application evolved from multiple externally visible service addresses:
+
+```text
+Client
+├── Auth :8081
+├── User :8082
+└── Story :8083
+```
+
+to a single entry point:
+
+```text
+Client
+   ↓
+API Gateway :8080
+   ↓
+Eureka
+   ↓
+LoadBalancer
+   ↓
+target service
+```
+
+This creates a clear boundary between external traffic and the internal traffic.
