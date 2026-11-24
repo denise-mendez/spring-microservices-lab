@@ -1,5 +1,6 @@
 package dev.storylab.authservice.config;
 
+import dev.storylab.correlationid.common.CorrelationIdInterceptor;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +18,13 @@ public class RestClientConfig {
 
     @Bean
     @LoadBalanced
-    public RestClient.Builder loadBalancedRestClientBuilder(){
-        return RestClient.builder();
+    public RestClient.Builder loadBalancedRestClientBuilder(CorrelationIdInterceptor correlationIdInterceptor){
+        return RestClient.builder()
+                .requestInterceptor(correlationIdInterceptor);
+    }
+
+    @Bean
+    public CorrelationIdInterceptor correlationIdInterceptor(){
+        return new CorrelationIdInterceptor();
     }
 }
