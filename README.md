@@ -73,9 +73,11 @@ spring-microservices-lab/
 ├── 11-api-gateway/
 ├── 12-correlation-id/
 ├── 13-kafka-messaging/
-├── 14-kubernetes-deployment/
-├── 15-kubernetes-scaling/
-└── 15-rolling-update/
+├── 14-resilience
+├── 15-rate-limit
+├── 16-kubernetes-deployment/
+├── 17-kubernetes-scaling/
+└── 18-rolling-update/
 ```
 
 Each lab is designed as an independent exercise focused on a particular concept.
@@ -457,7 +459,7 @@ Responsibilities:
 
 Cross-service relationships are represented through identifiers and authenticated claims rather than shared JPA entities.
 
-### 06 - Docker Composer
+### 06 - Docker Compose
 
 **Status:** Backlog
 
@@ -471,6 +473,8 @@ AWS integration for external file storage
 
 
 ### 08 - Config Server
+
+**Status:** Implemented
 
 This lab introduces centralized configuration management for the Story microservices using Spring Cloud Config.
 
@@ -601,6 +605,8 @@ After this lab:
 
 ### 11 - Eureka Service Discovery
 
+**Status:** Implemented
+
 This lab introduces service registration and discovery using Spring Cloud Netflix Eureka.
 
 The Auth, User, and Story microservices register themselves with a standalone Eureka Server, providing a centralized registry of available services.
@@ -730,6 +736,8 @@ STORY-SERVICE
 ```
 
 ### 10 - Synchronous Service Communication
+
+**Status:** Implemented
 
 This lab introduces synchronous communication between the Story microservices using Spring `RestClient`, 
 Eureka service discovery, and Spring Cloud LoadBalancer. This allows services to communicate using logical service names.
@@ -891,6 +899,8 @@ Communication happens through HTTP contracts. Small consumer DTOs are intentiona
 
 
 ### 11 - API Gateway
+
+**Status:** Implemented
 
 This lab introduces an API Gateway as the single entry point to the Story microservices.
 
@@ -1079,3 +1089,8 @@ target service
 ```
 
 This creates a clear boundary between external traffic and the internal traffic.
+
+
+### 12 - Correlation id
+
+**Status:** In Progress
