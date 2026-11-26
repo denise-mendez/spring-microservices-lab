@@ -4,6 +4,7 @@ import dev.storylab.userservice.entity.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -18,7 +19,7 @@ public class UserRepositoryTest {
     @Test
     void shouldSaveUser(){
         User user = createUser("Dylan20",
-                1L);
+                1L, "dylan@example.com");
 
         User savedUser = userRepository.saveAndFlush(user);
 
@@ -32,7 +33,8 @@ public class UserRepositoryTest {
     void shouldFindUserByUsername(){
         userRepository.saveAndFlush(
             createUser("Dylan20",
-                    1L)
+                    1L,
+                    "dylan@example.com")
         );
 
         Optional<User> result = userRepository.findByUsername("Dylan20");
@@ -49,7 +51,8 @@ public class UserRepositoryTest {
     void shouldReturnTrueWhenUsernameExists() {
         userRepository.saveAndFlush(
                 createUser("Dylan20",
-                        1L)
+                        1L,
+                        "dylan@example.com")
         );
 
         boolean exists = userRepository.existsByUsername("Dylan20");
@@ -64,11 +67,12 @@ public class UserRepositoryTest {
         assertFalse(exists);
     }
 
-    private User createUser(String username, Long accountId){
+    private User createUser(String username, Long accountId, String email){
         User user = new User();
 
         user.setUsername(username);
         user.setAccountId(accountId);
+        user.setEmail(email);
         user.setCreatedAt(LocalDateTime.now());
 
         return user;
@@ -78,7 +82,8 @@ public class UserRepositoryTest {
     void shouldFindUserByAccountId(){
         userRepository.saveAndFlush(
                 createUser("Dylan20",
-                        1L)
+                        1L,
+                        "dylan@example.com")
         );
 
         Optional<User> result = userRepository.findByAccountId(1L);
@@ -95,7 +100,8 @@ public class UserRepositoryTest {
     void shouldReturnTrueWhenAccountIdExists() {
         userRepository.saveAndFlush(
                 createUser("Dylan20",
-                        1L)
+                        1L,
+                        "dylan@example.com")
         );
 
         boolean exists = userRepository.existsByAccountId(1L);
@@ -106,6 +112,35 @@ public class UserRepositoryTest {
     @Test
     void shouldReturnFalseWhenAccountIdDoesNotExists() {
         boolean exists = userRepository.existsByAccountId(3L);
+
+        assertFalse(exists);
+    }
+
+    @Test
+    void shouldFindUserByEmail(){
+        User user = createUser("Maya55", 7L, "maya@example.com");
+        userRepository.saveAndFlush(user);
+        Optional<User> result = userRepository.findByEmail("maya@example.com");
+        assertTrue(result.isPresent());
+        assertEquals("maya@example.com", result.get().getEmail());
+    }
+
+    @Test
+    void shouldReturnTrueWhenEmailExists() {
+        userRepository.saveAndFlush(
+                createUser("maya55",
+                        1L,
+                        "maya@example.com")
+        );
+
+        boolean exists = userRepository.existsByEmail("maya@example.com");
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void shouldReturnFalseWhenEmailDoesNotExists() {
+        boolean exists = userRepository.existsByEmail("adifferentemail@example.com");
 
         assertFalse(exists);
     }
