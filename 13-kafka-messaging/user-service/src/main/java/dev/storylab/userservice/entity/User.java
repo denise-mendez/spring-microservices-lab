@@ -23,6 +23,12 @@ public class User {
     )
     private Long accountId;
 
+    @Column(
+            nullable = false,
+            unique = true
+    )
+    private String email;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -50,6 +56,14 @@ public class User {
 
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public LocalDateTime getCreatedAt() {

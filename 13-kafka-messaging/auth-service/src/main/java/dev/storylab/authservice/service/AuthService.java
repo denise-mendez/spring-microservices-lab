@@ -57,7 +57,8 @@ public class AuthService {
 
         userClient.createUser(new CreateUserRequest(
                 savedAccount.getId(),
-                savedAccount.getUsername()
+                savedAccount.getUsername(),
+                request.email()
         ));
 
         return new AccountResponse(

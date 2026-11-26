@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record CreateUserRequest(
         Long accountId,
-        String username
+        String username,
+        String email
 ) {
 }

@@ -32,6 +32,7 @@ public class UserService {
 
         user.setAccountId(request.accountId());
         user.setUsername(request.username());
+        user.setEmail(request.email());
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
@@ -53,6 +54,7 @@ public class UserService {
                 user.getId(),
                 user.getAccountId(),
                 user.getUsername(),
+                user.getEmail(),
                 user.getCreatedAt()
         );
     }

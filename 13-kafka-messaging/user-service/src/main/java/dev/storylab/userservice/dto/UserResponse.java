@@ -6,6 +6,7 @@ public record UserResponse(
         Long id,
         Long accountId,
         String username,
+        String email,
         LocalDateTime createdAt
 ) {
 }
