@@ -4,12 +4,12 @@ import dev.storylab.authservice.client.UserClient;
 import dev.storylab.authservice.client.dto.CreateUserRequest;
 import dev.storylab.authservice.dto.*;
 import dev.storylab.authservice.entity.Account;
-import dev.storylab.authservice.exception.AccountNotFoundException;
 import dev.storylab.authservice.exception.UsernameAlreadyExistsException;
 import dev.storylab.authservice.repository.AccountRepository;
 import dev.storylab.authservice.security.JwtService;
 import dev.storylab.authservice.security.SecurityRole;
-import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,6 +27,8 @@ public class AuthService {
 
     AuthenticationManager authenticationManager;
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     public AuthService(AccountRepository accountRepository, PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager, JwtService jwtService, UserClient userClient) {
         this.accountRepository = accountRepository;
@@ -40,6 +42,8 @@ public class AuthService {
         if (accountRepository.existsByUsername(request.username()))
             throw new UsernameAlreadyExistsException(request.username());
 
+        log.info("Registering account for username {}", request.username());
+
         Account account = new Account();
 
         account.setUsername(request.username());
@@ -48,6 +52,8 @@ public class AuthService {
         account.setCreatedAt(LocalDateTime.now());
 
         Account savedAccount = accountRepository.save(account);
+
+        log.info("Provisioning user profile for account {}", savedAccount.getId());
 
         userClient.createUser(new CreateUserRequest(
                 savedAccount.getId(),

@@ -6,12 +6,15 @@ import dev.storylab.userservice.entity.User;
 import dev.storylab.userservice.exception.UserNotFoundException;
 import dev.storylab.userservice.repository.UserRepository;
 import jakarta.validation.constraints.NotBlank;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
 @Service
 public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {
@@ -22,6 +25,8 @@ public class UserService {
         if(userRepository.existsByAccountId(request.accountId())) {
             return getUserByAccountId(request.accountId());
         }
+
+        log.info("Creating user profile for account {}", request.accountId());
 
         User user = new User();
 

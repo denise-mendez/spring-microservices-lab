@@ -13,6 +13,8 @@ import dev.storylab.storyservice.repository.StoryRepository;
 import dev.storylab.storyservice.security.CurrentUser;
 import dev.storylab.storyservice.security.SecurityRole;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,7 @@ import java.util.stream.Stream;
 
 @Service
 public class StoryService {
+    private static final Logger log = LoggerFactory.getLogger(StoryService.class);
     private final StoryRepository storyRepository;
     private final UserClient userClient;
 
@@ -154,11 +157,15 @@ public class StoryService {
             throw new StoryNotFoundException(id);
         }
 
+        log.info("Retrieving Story details or id {}", id);
+
         Story story = findStoryById(id);
 
         verifyCanPerformAction(story, currentUser);
 
         AuthorSummary author = userClient.getUserByAccountId(story.getAuthorId());
+
+        log.info("Retrieving author information for account {}", story.getAuthorId());
 
         return new StoryDetailsResponse(
                 story.getId(),
