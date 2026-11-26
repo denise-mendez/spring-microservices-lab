@@ -73,9 +73,11 @@ spring-microservices-lab/
 ├── 11-api-gateway/
 ├── 12-correlation-id/
 ├── 13-kafka-messaging/
-├── 14-kubernetes-deployment/
-├── 15-kubernetes-scaling/
-└── 15-rolling-update/
+├── 14-resilience
+├── 15-rate-limit
+├── 16-kubernetes-deployment/
+├── 17-kubernetes-scaling/
+└── 18-rolling-update/
 ```
 
 Each lab is designed as an independent exercise focused on a particular concept.
@@ -457,7 +459,7 @@ Responsibilities:
 
 Cross-service relationships are represented through identifiers and authenticated claims rather than shared JPA entities.
 
-### 06 - Docker Composer
+### 06 - Docker Compose
 
 **Status:** Backlog
 
@@ -471,6 +473,8 @@ AWS integration for external file storage
 
 
 ### 08 - Config Server
+
+**Status:** Implemented
 
 This lab introduces centralized configuration management for the Story microservices using Spring Cloud Config.
 
@@ -601,6 +605,8 @@ After this lab:
 
 ### 11 - Eureka Service Discovery
 
+**Status:** Implemented
+
 This lab introduces service registration and discovery using Spring Cloud Netflix Eureka.
 
 The Auth, User, and Story microservices register themselves with a standalone Eureka Server, providing a centralized registry of available services.
@@ -730,6 +736,8 @@ STORY-SERVICE
 ```
 
 ### 10 - Synchronous Service Communication
+
+**Status:** Implemented
 
 This lab introduces synchronous communication between the Story microservices using Spring `RestClient`, 
 Eureka service discovery, and Spring Cloud LoadBalancer. This allows services to communicate using logical service names.
@@ -891,6 +899,8 @@ Communication happens through HTTP contracts. Small consumer DTOs are intentiona
 
 
 ### 11 - API Gateway
+
+**Status:** Implemented
 
 This lab introduces an API Gateway as the single entry point to the Story microservices.
 
@@ -1079,3 +1089,213 @@ target service
 ```
 
 This creates a clear boundary between external traffic and the internal traffic.
+
+
+### 12 - Correlation id
+
+**Status:** In Progress
+
+## Focus
+
+Add request correlation across the distributed application so a single operation can be followed through multiple services using the same identifier.
+
+The correlationid contract is:
+
+```text
+HTTP header:
+X-Correlation-Id
+
+Logging context:
+correlationId
+```
+
+The implementation supports both client-provided correlation IDs and automatically generated UUIDs.
+
+## What Was Implemented
+
+### Gateway correlation ID generation
+
+The API Gateway is the normal entry point for external requests.
+
+Its correlation filter:
+
+- Reads `X-Correlation-Id` when supplied by the client
+- Generates a UUID when the header is missing or blank
+- Adds the correlation ID to the downstream request
+- Returns the same value in the response header
+- Stores the value in the reactive request context
+
+
+### Shared correlation library
+
+A reusable library was introduced:
+
+```text
+libs/
+└── correlationid-common/
+    ├── CorrelationIdConstants
+    ├── CorrelationIdFilter
+    └── CorrelationIdInterceptor
+```
+
+The library contains correlation infrastructure shared by the MVC services.
+
+### MVC request filter
+
+Auth, User, and Story use the shared `CorrelationIdFilter`, implemented with `OncePerRequestFilter`.
+
+For every incoming request it:
+
+```text
+reads X-Correlation-Id
+        ↓
+generates fallback UUID if necessary
+        ↓
+stores correlationId in MDC
+        ↓
+executes request
+        ↓
+cleans MDC
+```
+
+The fallback UUID allows each service to remain independently usable even if it is called directly instead of through the Gateway.
+
+### MDC logging context
+
+The HTTP correlation ID is mapped to:
+
+```text
+correlationId
+```
+
+inside MDC.
+
+This allows normal application logs to include the identifier without passing it through controller and service method parameters.
+
+For example:
+
+```text
+[register-001] Registering account for username denise
+
+[register-001] Creating user profile for account 1
+```
+
+The MDC value is removed after each request to prevent context from leaking between reused servlet threads.
+
+### RestClient propagation
+
+Auth and Story already perform synchronous service-to-service communication with User Service.
+
+The shared `CorrelationIdInterceptor` reads the current correlation ID from MDC and adds it to outgoing `RestClient` requests:
+
+```text
+MDC
+ correlationId=abc-123
+        ↓
+RestClient interceptor
+        ↓
+X-Correlation-Id: abc-123
+        ↓
+USER-SERVICE
+```
+
+This keeps the same identifier across service boundaries.
+
+### Shared logging configuration
+
+The console logging pattern was configured centrally so services can display the MDC correlation ID automatically.
+
+Conceptually:
+
+```text
+timestamp
+level
+correlation ID
+thread
+logger
+message
+```
+
+A missing value can be displayed explicitly as:
+
+```text
+NO-CORRELATION-ID
+```
+
+which helps identify requests that are not passing through the expected correlationid flow.
+
+## Verification
+
+The implementation was tested with both generated and client-provided correlation IDs.
+
+### Generated ID
+
+Request:
+
+```text
+GET /api/stories
+```
+
+without `X-Correlation-Id`.
+
+Expected:
+
+```text
+Gateway generates UUID
+        ↓
+Story receives same UUID
+        ↓
+response includes X-Correlation-Id
+```
+
+### Client-provided ID
+
+Request:
+
+```text
+X-Correlation-Id: manual-test-001
+```
+
+Expected:
+
+```text
+Gateway preserves manual-test-001
+        ↓
+downstream service receives manual-test-001
+        ↓
+response returns manual-test-001
+```
+
+## Key Learnings
+
+### Correlation and logging are separate concerns
+
+`X-Correlation-Id` transports the identifier between applications.
+
+MDC makes that identifier available to logs inside MVC services.
+
+```text
+X-Correlation-Id
+→ distributed HTTP context
+
+correlationId
+→ application logging context
+```
+
+### The Gateway and MVC services require different mechanisms
+
+The Gateway uses reactive request processing, while Auth, User, and Story use the traditional Spring MVC/Servlet model.
+
+Therefore, correlation handling uses:
+
+```text
+Gateway
+→ GlobalFilter
+→ reactive request context
+
+Auth / User / Story
+→ OncePerRequestFilter
+→ MDC
+```
+
+The correlation contract remains the same even though the implementations differ.
